@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desafio Técnico - Dashboard Consolidado</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Transições suaves e scrollbar estilizada */
+    * {
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .tab-active {
+      border-bottom: 3px solid #4f46e5;
+      color: #4f46e5;
+      font-weight: 600;
+    }
+    .badge-rule-0 { background-color: #f1f5f9; color: #64748b; }
+    .badge-rule-1 { background-color: #fef3c7; color: #b45309; }
+    .badge-rule-5 { background-color: #dcfce7; color: #15803d; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 tracking-tight">Painel de Gestão Comercial & Depósito</h1>
+          <p class="text-xs text-slate-500">Módulos: Comissões de Vendas, Controle de Estoque & Cálculo de Multas</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+          ● Sistema Ativo
+        </span>
+      </div>
+    </div>
+
+    <!-- TABS DE NAVEGAÇÃO -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 border-t border-slate-100">
+      <button onclick="mudarAba('comissoes')" id="tab-btn-comissoes" class="py-3 px-1 text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center gap-2 tab-active">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        1. Comissões de Vendas
+      </button>
+
+      <button onclick="mudarAba('estoque')" id="tab-btn-estoque" class="py-3 px-1 text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        2. Controle de Estoque
+      </button>
+
+      <button onclick="mudarAba('juros')" id="tab-btn-juros" class="py-3 px-1 text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        3. Cálculo de Juros & Multa
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+    <!-- ========================================== -->
+    <!-- ABA 1: COMISSÕES DE VENDAS -->
+    <!-- ========================================== -->
+    <section id="aba-comissoes" class="space-y-6">
+      
+      <!-- Top Banner com Regras do Desafio -->
+      <div class="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-indigo-950 flex items-center gap-2">
+            <span>Regras de Comissionamento Comercial</span>
+            <span class="text-xs bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full font-semibold">JSON Automático</span>
+          </h2>
+          <p class="text-xs text-indigo-800/80 mt-1">
+            Cada venda é processada individualmente: 
+            <strong>&lt; R$100 (0%)</strong> • 
+            <strong>R$100 a R$499,99 (1%)</strong> • 
+            <strong>≥ R$500 (5%)</strong>.
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="alternarModalJsonVendas()" class="text-xs font-semibold px-3 py-2 bg-white text-indigo-700 hover:bg-indigo-50 border border-indigo-200 rounded-lg shadow-sm transition">
+            Ver / Editar JSON de Vendas
+          </button>
+        </div>
+      </div>
+
+      <!-- Métricas Resumo -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total de Vendas</span>
+            <span class="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </span>
+          </div>
+          <p id="metric-total-vendas" class="text-2xl font-bold text-slate-900 mt-2">R$ 0,00</p>
+          <span id="metric-qtd-vendas" class="text-xs text-slate-500 font-medium">0 transações processadas</span>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total em Comissões</span>
+            <span class="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </span>
+          </div>
+          <p id="metric-total-comissoes" class="text-2xl font-bold text-emerald-600 mt-2">R$ 0,00</p>
+          <span id="metric-taxa-media" class="text-xs text-slate-500 font-medium">Taxa média efetiva: 0%</span>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vendedor Destaque</span>
+            <span class="p-2 rounded-lg bg-amber-50 text-amber-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            </span>
+          </div>
+          <p id="metric-top-vendedor" class="text-xl font-bold text-slate-900 mt-2 truncate">-</p>
+          <span id="metric-top-comissao" class="text-xs text-amber-600 font-medium">Maior valor recebido</span>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticket Médio por Venda</span>
+            <span class="p-2 rounded-lg bg-violet-50 text-violet-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </span>
+          </div>
+          <p id="metric-ticket-medio" class="text-2xl font-bold text-slate-900 mt-2">R$ 0,00</p>
+          <span class="text-xs text-slate-500 font-medium">Média por transação</span>
+        </div>
+      </div>
+
+      <!-- Grid: Consolidado por Vendedor + Detalhes das Vendas -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Cartões de Vendedores -->
+        <div class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-800 text-sm">Comissão Final por Vendedor</h3>
+            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-medium">Total Acumulado</span>
+          </div>
+          <div id="lista-vendedores-cards" class="divide-y divide-slate-100 mt-2 flex-1">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+
+        <!-- Tabela Detalhada de Vendas -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Extrato de Vendas e Aplicação de Regras</h3>
+              <p class="text-xs text-slate-500">Auditoria linha a linha das regras 0%, 1% ou 5%</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="filtro-vendedor" onchange="renderizarTabelaVendas()" class="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-slate-50 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="TODOS">Todos os Vendedores</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto mt-3 max-h-[420px] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="sticky top-0 bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="p-2.5">#</th>
+                  <th class="p-2.5">Vendedor</th>
+                  <th class="p-2.5 text-right">Valor Venda</th>
+                  <th class="p-2.5 text-center">Faixa / Alíquota</th>
+                  <th class="p-2.5 text-right">Comissão Gerada</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-vendas-body" class="divide-y divide-slate-100 text-slate-700">
+                <!-- Linhas preenchidas via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- ABA 2: CONTROLE DE ESTOQUE -->
+    <!-- ========================================== -->
+    <section id="aba-estoque" class="space-y-6 hidden">
+      
+      <!-- Banner de Operações -->
+      <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-emerald-950 flex items-center gap-2">
+            <span>Gestão & Movimentação de Depósito</span>
+            <span class="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">Regra de Validação de Saldo</span>
+          </h2>
+          <p class="text-xs text-emerald-800/80 mt-1">
+            Gera ID único (UUID v4) para cada movimentação, exige descrição e retorna o saldo final em tempo real.
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="resetarEstoquePadrao()" class="text-xs font-semibold px-3 py-2 bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-200 rounded-lg shadow-sm transition">
+            Restaurar Estoque Padrão
+          </button>
+          <button onclick="abrirModalMovimentacao()" class="text-xs font-semibold px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm shadow-emerald-200 transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Nova Movimentação
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid: Inventário Atual + Formulário Rápido -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Lista de Produtos / Saldo Atual -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Inventário em Tempo Real</h3>
+              <p class="text-xs text-slate-500">Produtos do depósito e suas quantidades disponíveis</p>
+            </div>
+            <span id="badge-total-itens" class="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded font-medium">5 produtos</span>
+          </div>
+
+          <div class="overflow-x-auto mt-3">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">Código</th>
+                  <th class="p-3">Descrição do Produto</th>
+                  <th class="p-3 text-right">Saldo em Estoque</th>
+                  <th class="p-3 text-center">Status</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-estoque-body" class="divide-y divide-slate-100">
+                <!-- Renderizado via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Formulário Rápido de Lançamento -->
+        <div class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
+          <div>
+            <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+              <h3 class="font-bold text-slate-800 text-sm">Lançar Movimento</h3>
+              <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">ID Automático</span>
+            </div>
+
+            <form id="form-movimentacao-lateral" onsubmit="executarMovimentacao(event)" class="mt-4 space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Produto</label>
+                <select id="select-produto" required class="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <!-- Opções preenchidas via JS -->
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Operação</label>
+                  <select id="select-tipo" required class="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold">
+                    <option value="ENTRADA" class="text-emerald-700 font-bold">🟢 ENTRADA</option>
+                    <option value="SAIDA" class="text-rose-700 font-bold">🔴 SAÍDA</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Quantidade</label>
+                  <input type="number" id="input-quantidade" min="1" required placeholder="Ex: 15" class="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Descrição / Motivo</label>
+                <input type="text" id="input-descricao" required placeholder="Ex: Recebimento NF 302, Ajuste de Balanço..." class="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+
+              <button type="submit" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-2 mt-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Confirmar e Atualizar Saldo
+              </button>
+            </form>
+          </div>
+
+          <div class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-500 flex items-start gap-2">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span><strong>Regra de Integridade:</strong> O sistema bloqueia movimentações de SAÍDA que excedam o saldo disponível.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Histórico de Movimentações Registradas -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm">Histórico de Movimentações Realizadas</h3>
+            <p class="text-xs text-slate-500">Trilha de auditoria com Identificador Único (UUID), tipo e saldo final retornado</p>
+          </div>
+          <span id="badge-total-movs" class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono">0 registros</span>
+        </div>
+
+        <div class="overflow-x-auto mt-3 max-h-[300px] overflow-y-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="sticky top-0 bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">ID Único (UUID)</th>
+                <th class="p-2.5">Data / Hora</th>
+                <th class="p-2.5">Produto</th>
+                <th class="p-2.5 text-center">Tipo</th>
+                <th class="p-2.5 text-right">Qtd Movimentada</th>
+                <th class="p-2.5 text-right font-bold">Saldo Final</th>
+                <th class="p-2.5">Descrição / Motivo</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-historico-body" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="7" class="text-center p-6 text-slate-400">Nenhuma movimentação realizada ainda nesta sessão.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- ABA 3: CÁLCULO DE JUROS E MULTA -->
+    <!-- ========================================== -->
+    <section id="aba-juros" class="space-y-6 hidden">
+      
+      <!-- Top Banner -->
+      <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-amber-950 flex items-center gap-2">
+            <span>Calculadora de Multa por Atraso Diário</span>
+            <span class="text-xs bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-semibold">2,5% ao dia</span>
+          </h2>
+          <p class="text-xs text-amber-800/80 mt-1">
+            Calcula dinamicamente a quantidade de dias entre a data de vencimento e a data atual, aplicando a multa contratual.
+          </p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-medium text-amber-800 bg-white/70 px-3 py-1.5 rounded-lg border border-amber-200 shadow-sm inline-block">
+            Data de Referência (Hoje): <strong id="lbl-data-hoje" class="text-amber-950"></strong>
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Formulário de Entrada de Dados -->
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <h3 class="font-bold text-slate-800 text-sm pb-2 border-b border-slate-100">Parâmetros do Título</h3>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Valor Original do Documento (R$)</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold">R$</span>
+                <input type="number" id="input-juros-valor" step="0.01" min="0.01" value="1000.00" oninput="calcularJuros()" class="w-full pl-9 pr-3 py-2.5 text-sm font-semibold border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Data de Vencimento</label>
+              <input type="date" id="input-juros-vencimento" onchange="calcularJuros()" class="w-full p-2.5 text-sm font-semibold border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            </div>
+
+            <!-- Atalhos Rápidos de Simulação -->
+            <div>
+              <span class="block text-[11px] font-semibold text-slate-500 mb-1.5">Atalhos rápidos para teste:</span>
+              <div class="flex flex-wrap gap-1.5">
+                <button type="button" onclick="definirDataAtraso(0)" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-medium transition">Hoje (Em dia)</button>
+                <button type="button" onclick="definirDataAtraso(1)" class="text-[11px] px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-md font-medium border border-amber-200 transition">1 dia atraso</button>
+                <button type="button" onclick="definirDataAtraso(5)" class="text-[11px] px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-md font-medium border border-amber-200 transition">5 dias atraso</button>
+                <button type="button" onclick="definirDataAtraso(10)" class="text-[11px] px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-md font-medium border border-amber-200 transition">10 dias atraso</button>
+                <button type="button" onclick="definirDataAtraso(30)" class="text-[11px] px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-md font-medium border border-amber-200 transition">30 dias atraso</button>
+              </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 space-y-1">
+              <p class="font-semibold text-slate-700">Fórmula de Aplicação:</p>
+              <p class="font-mono text-[11px] text-slate-500">Juros = Valor × (2,5% × Dias de Atraso)</p>
+              <p class="text-[11px] text-slate-400">Total a Pagar = Valor Original + Juros</p>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <button onclick="calcularJuros()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-lg shadow-sm transition">
+              Recalcular Agora
+            </button>
+          </div>
+        </div>
+
+        <!-- Cartão Demonstrativo de Cobrança / Resultado -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 class="font-bold text-slate-800 text-sm">Demonstrativo Atualizado do Título</h3>
+              <span id="badge-status-titulo" class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600">
+                Aguardando
+              </span>
+            </div>
+
+            <!-- Resumo Financeiro em Destaque -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-5">
+              <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 text-center">
+                <span class="text-[11px] font-semibold text-slate-500 uppercase">Dias de Atraso</span>
+                <p id="res-dias-atraso" class="text-2xl font-extrabold text-slate-800 mt-1">0</p>
+                <span class="text-[10px] text-slate-400">dias corridos</span>
+              </div>
+
+              <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 text-center">
+                <span class="text-[11px] font-semibold text-amber-700 uppercase">Taxa Acumulada</span>
+                <p id="res-taxa-acumulada" class="text-2xl font-extrabold text-amber-700 mt-1">0%</p>
+                <span class="text-[10px] text-amber-600/80">2,5% × dias</span>
+              </div>
+
+              <div class="bg-rose-50 rounded-xl p-3 border border-rose-200 text-center">
+                <span class="text-[11px] font-semibold text-rose-700 uppercase">Juros / Multa</span>
+                <p id="res-valor-juros" class="text-2xl font-extrabold text-rose-700 mt-1">R$ 0,00</p>
+                <span class="text-[10px] text-rose-600/80">Acréscimo</span>
+              </div>
+            </div>
+
+            <!-- Extrato Detalhado Tipo Boleto Bancário -->
+            <div class="border border-slate-200 rounded-xl divide-y divide-slate-100 text-xs">
+              <div class="p-3 flex justify-between items-center bg-slate-50/50">
+                <span class="text-slate-600 font-medium">Valor Nominal (Original):</span>
+                <span id="res-valor-original" class="font-bold text-slate-800">R$ 0,00</span>
+              </div>
+              <div class="p-3 flex justify-between items-center bg-slate-50/50">
+                <span class="text-slate-600 font-medium">Data de Vencimento Informada:</span>
+                <span id="res-data-vencimento" class="font-mono text-slate-700">-</span>
+              </div>
+              <div class="p-3 flex justify-between items-center bg-slate-50/50">
+                <span class="text-slate-600 font-medium">Data de Pagamento (Hoje):</span>
+                <span id="res-data-hoje" class="font-mono text-slate-700">-</span>
+              </div>
+              <div class="p-3 flex justify-between items-center bg-rose-50/40 text-rose-800">
+                <span class="font-medium">(+) Multa por Atraso Diário (2,5%/dia):</span>
+                <span id="res-detalhe-juros" class="font-bold">+ R$ 0,00</span>
+              </div>
+              <div class="p-4 flex justify-between items-center bg-indigo-50/50">
+                <div>
+                  <span class="text-sm font-bold text-indigo-950 block">(=) VALOR TOTAL A PAGAR:</span>
+                  <span class="text-[11px] text-indigo-700">Valor corrigido para liquidação imediata</span>
+                </div>
+                <span id="res-valor-total" class="text-2xl font-black text-indigo-700">R$ 0,00</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="box-alerta-juros" class="mt-4 p-3 rounded-xl text-xs flex items-center gap-2">
+            <!-- Mensagem contextual de status -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: VISUALIZAR / EDITAR JSON DE VENDAS -->
+  <!-- ========================================== -->
+  <div id="modal-json-vendas" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+      <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div>
+          <h3 class="text-sm font-bold text-slate-800">Editor de Dados JSON (Vendas)</h3>
+          <p class="text-xs text-slate-500">Altere os dados ou adicione vendas para recalcular em tempo real</p>
+        </div>
+        <button onclick="alternarModalJsonVendas()" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-4 flex-1">
+        <textarea id="textarea-json-vendas" class="w-full h-80 font-mono text-xs p-3 bg-slate-900 text-emerald-400 rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+        <button onclick="restaurarVendasPadrao()" class="text-xs text-slate-600 hover:text-slate-800 underline">Restaurar JSON Original</button>
+        <div class="flex gap-2">
+          <button onclick="alternarModalJsonVendas()" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-200/50 rounded-lg">Cancelar</button>
+          <button onclick="salvarNovoJsonVendas()" class="px-4 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">Aplicar e Recalcular</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- SCRIPTS COM TODA A LÓGICA E ESTADO DA SPA -->
+  <!-- ========================================== -->
+  <script>
+    // ==========================================
+    // DADOS INICIAIS (PADRÃO DOS DESAFIOS)
+    // ==========================================
+    const DADOS_VENDAS_PADRAO = {
+      "vendas": [
+        { "vendedor": "João Silva", "valor": 1200.50 },
+        { "vendedor": "João Silva", "valor": 950.75 },
+        { "vendedor": "João Silva", "valor": 1800.00 },
+        { "vendedor": "João Silva", "valor": 1400.30 },
+        { "vendedor": "João Silva", "valor": 1100.90 },
+        { "vendedor": "João Silva", "valor": 1550.00 },
+        { "vendedor": "João Silva", "valor": 1700.80 },
+        { "vendedor": "João Silva", "valor": 250.30 },
+        { "vendedor": "João Silva", "valor": 480.75 },
+        { "vendedor": "João Silva", "valor": 320.40 },
+        
+        { "vendedor": "Maria Souza", "valor": 2100.40 },
+        { "vendedor": "Maria Souza", "valor": 1350.60 },
+        { "vendedor": "Maria Souza", "valor": 950.20 },
+        { "vendedor": "Maria Souza", "valor": 1600.75 },
+        { "vendedor": "Maria Souza", "valor": 1750.00 },
+        { "vendedor": "Maria Souza", "valor": 1450.90 },
+        { "vendedor": "Maria Souza", "valor": 400.50 },
+        { "vendedor": "Maria Souza", "valor": 180.20 },
+        { "vendedor": "Maria Souza", "valor": 90.75 },
+        
+        { "vendedor": "Carlos Oliveira", "valor": 800.50 },
+        { "vendedor": "Carlos Oliveira", "valor": 1200.00 },
+        { "vendedor": "Carlos Oliveira", "valor": 1950.30 },
+        { "vendedor": "Carlos Oliveira", "valor": 1750.80 },
+        { "vendedor": "Carlos Oliveira", "valor": 1300.60 },
+        { "vendedor": "Carlos Oliveira", "valor": 300.40 },
+        { "vendedor": "Carlos Oliveira", "valor": 500.00 },
+        { "vendedor": "Carlos Oliveira", "valor": 125.75 },
+        
+        { "vendedor": "Ana Lima", "valor": 1000.00 },
+        { "vendedor": "Ana Lima", "valor": 1100.50 },
+        { "vendedor": "Ana Lima", "valor": 1250.75 },
+        { "vendedor": "Ana Lima", "valor": 1400.20 },
+        { "vendedor": "Ana Lima", "valor": 1550.90 },
+        { "vendedor": "Ana Lima", "valor": 1650.00 },
+        { "vendedor": "Ana Lima", "valor": 75.30 },
+        { "vendedor": "Ana Lima", "valor": 420.90 },
+        { "vendedor": "Ana Lima", "valor": 315.40 }
+      ]
+    };
+
+    const DADOS_ESTOQUE_PADRAO = [
+      { codigoProduto: 101, descricaoProduto: "Caneta Azul", estoque: 150 },
+      { codigoProduto: 102, descricaoProduto: "Caderno Universitário", estoque: 75 },
+      { codigoProduto: 103, descricaoProduto: "Borracha Branca", estoque: 200 },
+      { codigoProduto: 104, descricaoProduto: "Lápis Preto HB", estoque: 320 },
+      { codigoProduto: 105, descricaoProduto: "Marcador de Texto Amarelo", estoque: 90 }
+    ];
+
+    // ==========================================
+    // ESTADO DA APLICAÇÃO
+    // ==========================================
+    let estadoVendas = JSON.parse(JSON.stringify(DADOS_VENDAS_PADRAO));
+    let estadoEstoque = JSON.parse(JSON.stringify(DADOS_ESTOQUE_PADRAO));
+    let historicoMovimentacoes = [];
+
+    // Formatadores Nativos da API Intl
+    const formatadorBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatadorNumero = new Intl.NumberFormat('pt-BR');
+
+    // ==========================================
+    // NAVEGAÇÃO DE ABAS
+    // ==========================================
+    function mudarAba(aba) {
+      const abas = ['comissoes', 'estoque', 'juros'];
+      abas.forEach(nome => {
+        const sec = document.getElementById(`aba-${nome}`);
+        const btn = document.getElementById(`tab-btn-${nome}`);
+        if (nome === aba) {
+          sec.classList.remove('hidden');
+          btn.classList.add('tab-active');
+        } else {
+          sec.classList.add('hidden');
+          btn.classList.remove('tab-active');
+        }
+      });
+    }
+
+    // ==========================================
+    // SISTEMA DE TOAST NOTIFICATIONS
+    // ==========================================
+    function mostrarToast(mensagem, tipo = 'sucesso') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const cores = {
+        sucesso: 'bg-emerald-600 text-white shadow-emerald-200',
+        erro: 'bg-rose-600 text-white shadow-rose-200',
+        info: 'bg-indigo-600 text-white shadow-indigo-200'
+      };
+
+      toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold transform transition-all duration-300 translate-y-2 opacity-0 ${cores[tipo] || cores.info}`;
+      toast.innerHTML = `
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${tipo === 'erro' ? 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' : 'M5 13l4 4L19 7'}"/>
+        </svg>
+        <span>${mensagem}</span>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ==========================================
+    // MÓDULO 1: COMISSÕES (DESAFIO 1)
+    // ==========================================
+    function calcularComissaoIndividual(valor) {
+      if (valor < 100.0) {
+        return { percentual: 0, valorComissao: 0.0, classeBadge: 'badge-rule-0', textoRegra: 'Abaixo de R$100 (0%)' };
+      } else if (valor < 500.0) {
+        return { percentual: 0.01, valorComissao: valor * 0.01, classeBadge: 'badge-rule-1', textoRegra: 'Abaixo de R$500 (1%)' };
+      } else {
+        return { percentual: 0.05, valorComissao: valor * 0.05, classeBadge: 'badge-rule-5', textoRegra: 'A partir de R$500 (5%)' };
+      }
+    }
+
+    function processarComissoes() {
+      const vendas = estadoVendas.vendas || [];
+      const consolidados = {};
+      let totalVendidoGeral = 0;
+      let totalComissoesGeral = 0;
+
+      vendas.forEach(venda => {
+        const v = venda.vendedor;
+        const val = venda.valor || 0;
+        const calc = calcularComissaoIndividual(val);
+
+        if (!consolidados[v]) {
+          consolidados[v] = {
+            totalVendido: 0,
+            totalComissao: 0,
+            qtdVendas: 0
+          };
+        }
+
+        consolidados[v].totalVendido += val;
+        consolidados[v].totalComissao += calc.valorComissao;
+        consolidados[v].qtdVendas += 1;
+
+        totalVendidoGeral += val;
+        totalComissoesGeral += calc.valorComissao;
+      });
+
+      // Atualiza Métricas do Topo
+      document.getElementById('metric-total-vendas').innerText = formatadorBRL.format(totalVendidoGeral);
+      document.getElementById('metric-qtd-vendas').innerText = `${vendas.length} transações processadas`;
+      document.getElementById('metric-total-comissoes').innerText = formatadorBRL.format(totalComissoesGeral);
+      
+      const taxaMedia = totalVendidoGeral > 0 ? ((totalComissoesGeral / totalVendidoGeral) * 100).toFixed(2) : 0;
+      document.getElementById('metric-taxa-media').innerText = `Taxa média efetiva: ${taxaMedia}%`;
+
+      const ticketMedio = vendas.length > 0 ? totalVendidoGeral / vendas.length : 0;
+      document.getElementById('metric-ticket-medio').innerText = formatadorBRL.format(ticketMedio);
+
+      // Top Vendedor
+      let topVendedorNome = '-';
+      let topVendedorValor = 0;
+      for (const [vendedor, info] of Object.entries(consolidados)) {
+        if (info.totalComissao > topVendedorValor) {
+          topVendedorValor = info.totalComissao;
+          topVendedorNome = vendedor;
+        }
+      }
+      document.getElementById('metric-top-vendedor').innerText = topVendedorNome;
+      document.getElementById('metric-top-comissao').innerText = `Comissão: ${formatadorBRL.format(topVendedorValor)}`;
+
+      // Renderiza os Cards dos Vendedores
+      const containerCards = document.getElementById('lista-vendedores-cards');
+      containerCards.innerHTML = '';
+
+      const filtroVendedorSelect = document.getElementById('filtro-vendedor');
+      const valorFiltroAtual = filtroVendedorSelect.value;
+      filtroVendedorSelect.innerHTML = '<option value="TODOS">Todos os Vendedores</option>';
+
+      for (const [vendedor, info] of Object.entries(consolidados)) {
+        // Popula select de filtro
+        const opt = document.createElement('option');
+        opt.value = vendedor;
+        opt.innerText = vendedor;
+        filtroVendedorSelect.appendChild(opt);
+
+        // Card do Vendedor
+        const percTotal = totalComissoesGeral > 0 ? ((info.totalComissao / totalComissoesGeral) * 100).toFixed(1) : 0;
+        const div = document.createElement('div');
+        div.className = 'py-3 flex flex-col gap-1.5';
+        div.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 text-xs">${vendedor}</span>
+            <span class="font-extrabold text-emerald-600 text-sm">${formatadorBRL.format(info.totalComissao)}</span>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-slate-500">
+            <span>${info.qtdVendas} vendas (${formatadorBRL.format(info.totalVendido)})</span>
+            <span class="font-semibold text-slate-700">${percTotal}% do total</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${percTotal}%"></div>
+          </div>
+        `;
+        containerCards.appendChild(div);
+      }
+
+      filtroVendedorSelect.value = valorFiltroAtual || 'TODOS';
+      renderizarTabelaVendas();
+    }
+
+    function renderizarTabelaVendas() {
+      const filtro = document.getElementById('filtro-vendedor').value;
+      const vendas = estadoVendas.vendas || [];
+      const tbody = document.getElementById('tabela-vendas-body');
+      tbody.innerHTML = '';
+
+      let index = 1;
+      vendas.forEach(venda => {
+        if (filtro !== 'TODOS' && venda.vendedor !== filtro) return;
+
+        const val = venda.valor || 0;
+        const calc = calcularComissaoIndividual(val);
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="p-2.5 text-slate-400 font-mono text-[11px]">${index++}</td>
+          <td class="p-2.5 font-medium text-slate-800">${venda.vendedor}</td>
+          <td class="p-2.5 text-right font-semibold text-slate-700">${formatadorBRL.format(val)}</td>
+          <td class="p-2.5 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${calc.classeBadge}">
+              ${calc.textoRegra}
+            </span>
+          </td>
+          <td class="p-2.5 text-right font-bold ${calc.valorComissao > 0 ? 'text-emerald-700' : 'text-slate-400'}">
+            ${formatadorBRL.format(calc.valorComissao)}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function alternarModalJsonVendas() {
+      const modal = document.getElementById('modal-json-vendas');
+      if (modal.classList.contains('hidden')) {
+        document.getElementById('textarea-json-vendas').value = JSON.stringify(estadoVendas, null, 2);
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function restaurarVendasPadrao() {
+      estadoVendas = JSON.parse(JSON.stringify(DADOS_VENDAS_PADRAO));
+      document.getElementById('textarea-json-vendas').value = JSON.stringify(estadoVendas, null, 2);
+      processarComissoes();
+      mostrarToast('JSON restaurado para os dados originais do teste!', 'info');
+    }
+
+    function salvarNovoJsonVendas() {
+      try {
+        const conteudo = document.getElementById('textarea-json-vendas').value;
+        const parsed = JSON.parse(conteudo);
+        if (!parsed.vendas || !Array.isArray(parsed.vendas)) {
+          throw new Error('O JSON precisa ter uma chave "vendas" com uma lista.');
+        }
+        estadoVendas = parsed;
+        processarComissoes();
+        alternarModalJsonVendas();
+        mostrarToast('Vendas recalculadas com sucesso a partir do novo JSON!', 'sucesso');
+      } catch (e) {
+        alert('Erro ao validar JSON: ' + e.message);
+      }
+    }
+
+    // ==========================================
+    // MÓDULO 2: GESTÃO DE ESTOQUE (DESAFIO 2)
+    // ==========================================
+    function atualizarTabelaEstoque() {
+      const tbody = document.getElementById('tabela-estoque-body');
+      const selectProd = document.getElementById('select-produto');
+      
+      tbody.innerHTML = '';
+      selectProd.innerHTML = '';
+
+      let totalItensArmazem = 0;
+
+      estadoEstoque.forEach(p => {
+        totalItensArmazem += p.estoque;
+
+        // Opção do Select de Movimentação
+        const opt = document.createElement('option');
+        opt.value = p.codigoProduto;
+        opt.innerText = `[${p.codigoProduto}] ${p.descricaoProduto} (Saldo: ${p.estoque})`;
+        selectProd.appendChild(opt);
+
+        // Status badge
+        let statusBadge = p.estoque > 100 
+          ? '<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Normal</span>'
+          : '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Atenção</span>';
+        if (p.estoque === 0) {
+          statusBadge = '<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Esgotado</span>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="p-3 font-mono text-slate-500 font-semibold">#${p.codigoProduto}</td>
+          <td class="p-3 font-medium text-slate-900">${p.descricaoProduto}</td>
+          <td class="p-3 text-right font-extrabold text-sm text-slate-800">${p.estoque} un</td>
+          <td class="p-3 text-center">${statusBadge}</td>
+          <td class="p-3 text-center">
+            <button onclick="preencherMovimentoRapido(${p.codigoProduto}, 'ENTRADA')" class="p-1 hover:bg-emerald-50 text-emerald-600 rounded" title="Entrada Rápida">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            </button>
+            <button onclick="preencherMovimentoRapido(${p.codigoProduto}, 'SAIDA')" class="p-1 hover:bg-rose-50 text-rose-600 rounded ml-1" title="Saída Rápida">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('badge-total-itens').innerText = `${estadoEstoque.length} produtos (${totalItensArmazem} un)`;
+    }
+
+    function preencherMovimentoRapido(codigo, tipo) {
+      document.getElementById('select-produto').value = codigo;
+      document.getElementById('select-tipo').value = tipo;
+      document.getElementById('input-quantidade').focus();
+    }
+
+    function executarMovimentacao(event) {
+      event.preventDefault();
+
+      const codigo = parseInt(document.getElementById('select-produto').value, 10);
+      const tipo = document.getElementById('select-tipo').value;
+      const quantidade = parseInt(document.getElementById('input-quantidade').value, 10);
+      const descricao = document.getElementById('input-descricao').value.trim();
+
+      if (isNaN(quantidade) || quantidade <= 0) {
+        mostrarToast('A quantidade deve ser maior que zero!', 'erro');
+        return;
+      }
+
+      const produto = estadoEstoque.find(p => p.codigoProduto === codigo);
+      if (!produto) {
+        mostrarToast('Produto não encontrado.', 'erro');
+        return;
+      }
+
+      // Regra de Validação de Saída
+      if (tipo === 'SAIDA') {
+        if (produto.estoque < quantidade) {
+          mostrarToast(`Saldo insuficiente! Há apenas ${produto.estoque} unidades disponíveis.`, 'erro');
+          return;
+        }
+        produto.estoque -= quantidade;
+      } else {
+        produto.estoque += quantidade;
+      }
+
+      // Gera ID Único (UUID v4)
+      const idMovimentacao = crypto.randomUUID ? crypto.randomUUID() : 'mov-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+      const agora = new Date().toLocaleTimeString('pt-BR');
+
+      const registro = {
+        id: idMovimentacao,
+        hora: agora,
+        codigoProduto: codigo,
+        nomeProduto: produto.descricaoProduto,
+        tipo: tipo,
+        quantidade: quantidade,
+        saldoFinal: produto.estoque,
+        descricao: descricao
+      };
+
+      historicoMovimentacoes.unshift(registro);
+
+      // Atualiza Telas
+      atualizarTabelaEstoque();
+      renderizarHistoricoMovimentacoes();
+
+      // Limpa inputs
+      document.getElementById('input-quantidade').value = '';
+      document.getElementById('input-descricao').value = '';
+
+      mostrarToast(`Movimentação registrada com sucesso! Saldo final de ${produto.descricaoProduto}: ${produto.estoque} un`, 'sucesso');
+    }
+
+    function renderizarHistoricoMovimentacoes() {
+      const tbody = document.getElementById('tabela-historico-body');
+      document.getElementById('badge-total-movs').innerText = `${historicoMovimentacoes.length} registros`;
+
+      if (historicoMovimentacoes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center p-6 text-slate-400">Nenhuma movimentação realizada ainda nesta sessão.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      historicoMovimentacoes.forEach(m => {
+        const isEntrada = m.tipo === 'ENTRADA';
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="p-2.5 font-mono text-[10px] text-slate-500" title="${m.id}">${m.id.substring(0, 8)}...</td>
+          <td class="p-2.5 text-slate-500 text-[11px]">${m.hora}</td>
+          <td class="p-2.5 font-medium text-slate-800">[${m.codigoProduto}] ${m.nomeProduto}</td>
+          <td class="p-2.5 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isEntrada ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${m.tipo}
+            </span>
+          </td>
+          <td class="p-2.5 text-right font-semibold ${isEntrada ? 'text-emerald-700' : 'text-rose-700'}">
+            ${isEntrada ? '+' : '-'}${m.quantidade}
+          </td>
+          <td class="p-2.5 text-right font-extrabold text-slate-900 bg-slate-50/50">${m.saldoFinal}</td>
+          <td class="p-2.5 text-slate-600 truncate max-w-xs">${m.descricao}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function resetarEstoquePadrao() {
+      if (confirm('Deseja resetar o estoque e histórico para os valores originais do teste?')) {
+        estadoEstoque = JSON.parse(JSON.stringify(DADOS_ESTOQUE_PADRAO));
+        historicoMovimentacoes = [];
+        atualizarTabelaEstoque();
+        renderizarHistoricoMovimentacoes();
+        mostrarToast('Estoque e histórico reiniciados!', 'info');
+      }
+    }
+
+    function abrirModalMovimentacao() {
+      document.getElementById('input-quantidade').focus();
+    }
+
+    // ==========================================
+    // MÓDULO 3: CÁLCULO DE JUROS (DESAFIO 3)
+    // ==========================================
+    function calcularJuros() {
+      const valorStr = document.getElementById('input-juros-valor').value;
+      const dataVencStr = document.getElementById('input-juros-vencimento').value;
+
+      const valor = parseFloat(valorStr);
+      if (isNaN(valor) || valor <= 0 || !dataVencStr) {
+        return;
+      }
+
+      // Converte data vencimento
+      const partesVenc = dataVencStr.split('-');
+      const dataVenc = new Date(partesVenc[0], partesVenc[1] - 1, partesVenc[2]);
+      dataVenc.setHours(0, 0, 0, 0);
+
+      // Data de hoje
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      const diffTempo = hoje - dataVenc;
+      const diasAtraso = Math.floor(diffTempo / (1000 * 60 * 60 * 24));
+
+      const badgeStatus = document.getElementById('badge-status-titulo');
+      const boxAlerta = document.getElementById('box-alerta-juros');
+
+      document.getElementById('res-valor-original').innerText = formatadorBRL.format(valor);
+      document.getElementById('res-data-vencimento').innerText = dataVenc.toLocaleDateString('pt-BR');
+      document.getElementById('res-data-hoje').innerText = hoje.toLocaleDateString('pt-BR');
+
+      if (diasAtraso <= 0) {
+        // Em dia ou vence no futuro
+        badgeStatus.className = 'px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800';
+        badgeStatus.innerText = 'Em Dia (Sem Juros)';
+
+        document.getElementById('res-dias-atraso').innerText = '0';
+        document.getElementById('res-taxa-acumulada').innerText = '0%';
+        document.getElementById('res-valor-juros').innerText = 'R$ 0,00';
+        document.getElementById('res-detalhe-juros').innerText = 'R$ 0,00';
+        document.getElementById('res-valor-total').innerText = formatadorBRL.format(valor);
+
+        boxAlerta.className = 'mt-4 p-3 rounded-xl text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2';
+        boxAlerta.innerHTML = `
+          <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span>O documento está rigorosamente em dia. Não há incidência de encargos moratórios.</span>
+        `;
+      } else {
+        // Vencido
+        const taxaDiaria = 0.025; // 2,5% ao dia
+        const taxaTotalAcumulada = taxaDiaria * diasAtraso;
+        const valorJuros = valor * taxaTotalAcumulada;
+        const valorTotal = valor + valorJuros;
+
+        badgeStatus.className = 'px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-100 text-rose-800';
+        badgeStatus.innerText = `Vencido (${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'})`;
+
+        document.getElementById('res-dias-atraso').innerText = diasAtraso;
+        document.getElementById('res-taxa-acumulada').innerText = `${(taxaTotalAcumulada * 100).toFixed(1)}%`;
+        document.getElementById('res-valor-juros').innerText = formatadorBRL.format(valorJuros);
+        document.getElementById('res-detalhe-juros').innerText = `+ ${formatadorBRL.format(valorJuros)}`;
+        document.getElementById('res-valor-total').innerText = formatadorBRL.format(valorTotal);
+
+        boxAlerta.className = 'mt-4 p-3 rounded-xl text-xs bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2';
+        boxAlerta.innerHTML = `
+          <svg class="w-4 h-4 shrink-0 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span>Título vencido há <strong>${diasAtraso} dias</strong>. Multa diária calculada em <strong>2,5% ao dia</strong>.</span>
+        `;
+      }
+    }
+
+    function definirDataAtraso(diasAtraso) {
+      const data = new Date();
+      data.setDate(data.getDate() - diasAtraso);
+      const ano = data.getFullYear();
+      const mes = String(data.getMonth() + 1).padStart(2, '0');
+      const dia = String(data.getDate()).padStart(2, '0');
+      
+      document.getElementById('input-juros-vencimento').value = `${ano}-${mes}-${dia}`;
+      calcularJuros();
+    }
+
+
+
+    // ==========================================
+    // INICIALIZAÇÃO
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Inicia Comissões
+      processarComissoes();
+
+      // Inicia Estoque
+      atualizarTabelaEstoque();
+
+      // Inicia Juros com data padrão (venceu há 4 dias para já demonstrar o cálculo)
+      const hoje = new Date();
+      document.getElementById('lbl-data-hoje').innerText = hoje.toLocaleDateString('pt-BR');
+      definirDataAtraso(4);
+    });
+  </script>
+</body>
+</html>
