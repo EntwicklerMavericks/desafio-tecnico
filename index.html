@@ -73,7 +73,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-          ● Sistema Ativo
+          ● Online
         </span>
       </div>
     </div>
@@ -313,7 +313,15 @@
 
                 <div>
                   <label class="block text-xs font-semibold text-slate-700 mb-1">Quantidade</label>
-                  <input type="number" id="input-quantidade" min="1" required placeholder="Ex: 15" class="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <div class="flex items-center">
+                    <button type="button" onclick="ajustarQuantidade(-1)" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold text-xs rounded-l-lg border border-r-0 border-slate-200 transition" title="Diminuir quantidade">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                    </button>
+                    <input type="number" id="input-quantidade" min="1" required placeholder="Qtd" value="1" class="w-full text-xs text-center font-bold border-y border-slate-200 p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <button type="button" onclick="ajustarQuantidade(1)" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold text-xs rounded-r-lg border border-l-0 border-slate-200 transition" title="Aumentar quantidade">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -875,9 +883,41 @@
     }
 
     function preencherMovimentoRapido(codigo, tipo) {
-      document.getElementById('select-produto').value = codigo;
-      document.getElementById('select-tipo').value = tipo;
-      document.getElementById('input-quantidade').focus();
+      const selectProd = document.getElementById('select-produto');
+      const selectTipo = document.getElementById('select-tipo');
+      const inputQtd = document.getElementById('input-quantidade');
+
+      const prodAtual = parseInt(selectProd.value, 10);
+      const tipoAtual = selectTipo.value;
+      let qtdAtual = parseInt(inputQtd.value, 10);
+      if (isNaN(qtdAtual) || qtdAtual <= 0) {
+        qtdAtual = 0;
+      }
+
+      // Se já estava selecionado este mesmo produto e tipo, cada clique incrementa (+1)
+      if (prodAtual === codigo && tipoAtual === tipo && qtdAtual > 0) {
+        inputQtd.value = qtdAtual + 1;
+      } else {
+        // Se mudou de produto ou de tipo, define os campos e quantidade inicial 1
+        selectProd.value = codigo;
+        selectTipo.value = tipo;
+        inputQtd.value = 1;
+      }
+
+      inputQtd.focus();
+      inputQtd.select();
+    }
+
+    function ajustarQuantidade(delta) {
+      const inputQtd = document.getElementById('input-quantidade');
+      let valorAtual = parseInt(inputQtd.value, 10);
+      if (isNaN(valorAtual) || valorAtual <= 0) {
+        valorAtual = 1;
+      }
+      const novoValor = valorAtual + delta;
+      if (novoValor >= 1) {
+        inputQtd.value = novoValor;
+      }
     }
 
     function executarMovimentacao(event) {
@@ -932,7 +972,7 @@
       renderizarHistoricoMovimentacoes();
 
       // Limpa inputs
-      document.getElementById('input-quantidade').value = '';
+      document.getElementById('input-quantidade').value = '1';
       document.getElementById('input-descricao').value = '';
 
       mostrarToast(`Movimentação registrada com sucesso! Saldo final de ${produto.descricaoProduto}: ${produto.estoque} un`, 'sucesso');
